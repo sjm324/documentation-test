@@ -54,7 +54,6 @@ exhale_args = {
     ############################################################################
     # Suggested optional arguments.                                            #
     ############################################################################
-    "createTreeView":        True,
     "exhaleExecutesDoxygen": True,
     "exhaleDoxygenStdin": textwrap.dedent('''
         INPUT       = ../include
@@ -67,10 +66,9 @@ exhale_args = {
     ############################################################################
     # HTML Theme specific configurations.                                      #
     ############################################################################
-    # Fix broken Sphinx RTD Theme 'Edit on GitHub' links
-    # Search for 'Edit on GitHub' on the FAQ:
-    #     http://exhale.readthedocs.io/en/latest/faq.html
-    "pageLevelConfigMeta": ":github_url: https://github.com/svenevs/exhale-companion",
+    # The alabaster build of these docs exists to demonstrate why the tree view
+    # *SHOULD* be set to True ;)
+    "createTreeView": False,
     ############################################################################
     # Main library page layout example configuration.                          #
     ############################################################################
@@ -220,21 +218,9 @@ todo_include_todos = False
 # a list of builtin themes.
 # [[[ begin theme marker ]]]
 # The name of the Pygments (syntax highlighting) style to use.
-# `sphinx` works very well with the RTD theme, but you can always change it
 pygments_style = 'sphinx'
-
-# on_rtd is whether we are on readthedocs.org, this line of code grabbed from docs.readthedocs.org
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-
-if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme     = 'alabaster'
 # [[[ end theme marker ]]]
-
-# NOTE: this is only here for me to auto-place sections of conf.py in the docs
-#       but isn't needed in producion releases
-html_theme = 'sphinx_rtd_theme'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
