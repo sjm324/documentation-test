@@ -67,10 +67,9 @@ exhale_args = {
     ############################################################################
     # HTML Theme specific configurations.                                      #
     ############################################################################
-    # Fix broken Sphinx RTD Theme 'Edit on GitHub' links
-    # Search for 'Edit on GitHub' on the FAQ:
-    #     http://exhale.readthedocs.io/en/latest/faq.html
-    "pageLevelConfigMeta": ":github_url: https://github.com/svenevs/exhale-companion",
+    "treeViewIsBootstrap": True,
+    # NOTE: there exist many other options for you to tweak.  See
+    # http://exhale.readthedocs.io/en/latest/reference_exhale_configs.html#bootstrap-mods
     ############################################################################
     # Main library page layout example configuration.                          #
     ############################################################################
@@ -220,21 +219,133 @@ todo_include_todos = False
 # a list of builtin themes.
 # [[[ begin theme marker ]]]
 # The name of the Pygments (syntax highlighting) style to use.
-# `sphinx` works very well with the RTD theme, but you can always change it
-pygments_style = 'sphinx'
+# You should probably choose this according to the theme you are using for bootstrap...
+pygments_style = 'perldoc'  # or try 'monokai' :)  `pygmentize -L` shows all available
 
-# on_rtd is whether we are on readthedocs.org, this line of code grabbed from docs.readthedocs.org
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+import sphinx_bootstrap_theme
+html_theme = 'bootstrap'
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
-if not on_rtd:  # only import and set the theme if we're building docs locally
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+# Theme options are theme-specific and customize the look and feel of a
+# theme further.
+#
+# See here for all options:
+#     https://ryan-roemer.github.io/sphinx-bootstrap-theme/README.html#customization
+html_theme_options = {
+    # Render the next and previous page links in navbar. (Default: true)
+    'navbar_sidebarrel': False,
+
+    # Render the current pages TOC in the navbar. (Default: true)
+    'navbar_pagenav': True,
+
+    # Global TOC depth for "site" navbar tab. (Default: 1)
+    # Switching to -1 shows all levels.
+    'globaltoc_depth': -1,
+
+    # HTML navbar class (Default: "navbar") to attach to <div> element.
+    # For black navbar, do "navbar navbar-inverse"
+    #
+    # NOTE: depends on your theme if you are using bootswatch!
+    'navbar_class': "navbar navbar-inverse",
+
+    # Location of link to source.
+    # Options are "nav" (default), "footer" or anything else to exclude.
+    'source_link_position': "nav",
+
+    # Bootswatch (http://bootswatch.com/) theme.
+    'bootswatch_theme': "simplex",
+}
+
+html_static_path = ["_static"]
+
+# auto-magically called for you by `sphinx`
+def setup(app):
+    import os
+    # NOTE: by having `sphinx` installed, you already have `pygments`!
+    from pygments.styles import get_style_by_name
+
+    ####################################################################################
+    # IMPORTANT!                                                                       #
+    # You don't have to re-generate the css and javascript every time!  Simply add the #
+    # files to your repo.                                                              #
+    #                                                                                  #
+    # This is being done here because the bootstrap branch is the only one that needs  #
+    # these overrides!                                                                 #
+    #                                                                                  #
+    # You are more than welcome to just copy-paste this code in your docs without      #
+    # citation, but it's probably better to just generate them once and (assuming they #
+    # are working), `git add` the _static files.                                       #
+    ####################################################################################
+    # For bootstrap, there are two things you will probably want to force
+    # override:
+    #
+    # 1. The background color of your code listings.
+    # 2. Indent things like class members.
+    #
+    # Make the _static directory we gave in `html_static_path` above
+    try:
+        static_dir = "_static"
+        if not os.path.exists(static_dir):
+            os.makedirs(static_dir)
+        ################################################################################
+        # 1. Override the CSS                                                          #
+        ################################################################################
+        css_name = "override.css"
+        with open(os.path.join(static_dir, css_name), "w") as css:
+            # NOTE: because I'm using string.format, the starting and closing curly
+            # braces need to be escaped.  That's why it is
+            #
+            #    div[class|="highlight"] pre {{
+            #
+            # instead of
+            #
+            #    div[class|="highlight"] pre {
+            css.write(textwrap.dedent('''
+                /* Force override of bootstrap.  The Sphinx generated code listings
+                 * appear in something like
+                 *
+                 *   <div class="highlight-cpp">
+                 *     <div class="highlight">
+                 *       <pre>// the code</pre>
+                 *     </div>
+                 *   </div>
+                 *
+                 * So we're going to select the classes that start with highlight.
+                 */
+                div[class|="highlight"] pre {{
+                    background-color: {color} ! important;
+                }}
+            '''.format(
+                color=get_style_by_name(pygments_style).background_color
+            )))
+        ################################################################################
+        # 2. Force indentation.  See                                                   #
+        #    https://github.com/ryan-roemer/sphinx-bootstrap-theme/issues/89           #
+        ################################################################################
+        js_name = "indent.js"
+        with open(os.path.join(static_dir, js_name), "w") as js:
+            js.write(textwrap.dedent('''
+                $(function(){
+                    /* If a user-produced definition list, apply dl-horizontal. */
+                    if($("dl").attr("class") == "") {
+                        $("dl").addClass("dl-horizontal");
+                    }
+                    /* Otherwise, this is a `sphinx` definition list for class /
+                     * function / etc documentation.  Apply some padding instead. */
+                    else {
+                        $("dl").children("dd").css({"padding-left": "4%"});
+                    }
+                });
+            '''))
+        ################################################################################
+        # Last but not least, tell Sphinx to use these files!                          #
+        ################################################################################
+        # NOTE: Sphinx looks for these in the _static folder
+        app.add_stylesheet(css_name)
+        app.add_javascript(js_name)
+    except Exception as e:
+        raise RuntimeError("Could not generate static files:\n{0}".format(e))
 # [[[ end theme marker ]]]
-
-# NOTE: this is only here for me to auto-place sections of conf.py in the docs
-#       but isn't needed in producion releases
-html_theme = 'sphinx_rtd_theme'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -403,8 +514,16 @@ texinfo_documents = [
 
 rst_epilog = ".. |theme| replace:: ``{0}``".format(html_theme)
 
+# hack: I need the below setup(app), but the bootstrap docs shouldn't include
+# this stuff.  save the above setup(app) before redefining it
+
+bstrap_setup = setup
+
 # Called auto-magicallly by sphinx
 def setup(app):
+    # hack part two: call the previous setup xD
+    bstrap_setup(app)
+
     # This is pretty meta.  To help demonstrate what is going on, I'm
     # generating an rst file to `.. include::` in `index.rst` to show
     # the relevant sections of `conf.py` on the page.
