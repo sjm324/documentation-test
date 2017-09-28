@@ -116,9 +116,9 @@ exhale_args = {
     ############################################################################
     # Individual page layout example configuration.                            #
     ############################################################################
-    # Example of adding contents directives on custom kinds with custom title
-    "contentsTitle": "Page Contents",
-    "kindsWithContentsDirectives": ["class", "file", "namespace", "struct"],
+    # See `html_sidebars` below, since the I am adding a `bootstrap sidebar`
+    # for all pages, the contents directive becomes irrelevant.
+    "kindsWithContentsDirectives": [],
     # This is a testing site which is why I'm adding this
     "includeTemplateParamOrderList": True,
     ############################################################################
